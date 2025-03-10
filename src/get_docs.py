@@ -1,10 +1,11 @@
 import heapq
+from ir_datasets.datasets.base import Dataset
 
-def get_docs(dataset, query_id: str, num_docs: int = 10) -> tuple[list[str], list[str]]:
+def get_docs(dataset:Dataset, query_id: str, num_docs: int = 10) -> tuple[list[str], list[str]]:
     """Finds the most and least relevant documents for a given query.
 
     Args:
-        dataset: msmarco dataset
+        dataset(ir_datasets.datasets.base.Dataset): msmarco dataset
         query_id (str): query to evaluate
         num_docs (int): number of most and least relevant documents to return (default 10)
 
@@ -39,11 +40,11 @@ def get_docs(dataset, query_id: str, num_docs: int = 10) -> tuple[list[str], lis
     
     return most_relevant_docs, least_relevant_docs
 
-def get_docs_split(dataset, queries_list: list[str], num_docs_per_query: int = 10) -> Set[str]:
+def get_docs_split(dataset:Dataset, queries_list: list[str], num_docs_per_query: int = 10) -> Set[str]:
     """Returns a set of filtered document IDs for a list of queries.
 
     Args:
-        dataset: msmarco dataset
+        dataset(ir_datasets.datasets.base.Dataset): msmarco dataset
         queries_list (list[str]): query IDs to evaluate
         num_docs_per_query (int): number of most and least relevant documents to return
 
