@@ -8,7 +8,26 @@ nltk.download('averaged_perceptron_tagger_eng')
 from ir_datasets.datasets.base import Dataset
 import pandas as pd
 
-def classify_query(text):
+def classify_query(text: str) -> str:
+    """
+    Classifies a query based on the presence of interrogative words (WH-words) 
+    or auxiliary verbs, using POS tagging.
+
+    Args:
+        text (str): The query text to classify.
+
+    Returns:
+        str: The classified type of the query, one of:
+            - "What"
+            - "Which"
+            - "How"
+            - "Who"
+            - "Where"
+            - "When"
+            - "Why"
+            - "YesNo"
+            - "Other"
+    """
     tokens = word_tokenize(text)
     pos_tags = pos_tag(tokens)
 
@@ -40,9 +59,21 @@ def classify_query(text):
     
     return "Other"
 
-def get_query_df(dataset:Dataset):
-    df = pd.DataFrame(columns=["Query", "Query_ID", "Class"])
+def get_query_df(dataset: Dataset) -> pd.DataFrame:
+    """
+    Generates a Pandas DataFrame containing queries, their IDs, and their classified types.
 
+    Args:
+        dataset (Dataset): An `ir_datasets` dataset object that provides query data.
+
+    Returns:
+        pd.DataFrame: A DataFrame with three columns:
+            - "Query": The original query text.
+            - "Query_ID": The unique identifier for the query.
+            - "Class": The classified type of the query.
+    """
+    df = pd.DataFrame(columns=["Query", "Query_ID", "Class"])
+    
     for data in dataset.queries_iter():
         query_type = classify_query(data.text)
         df.loc[len(df)] = [data.text, data.query_id, query_type]
