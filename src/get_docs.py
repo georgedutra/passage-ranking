@@ -16,9 +16,9 @@ def get_docs(dataset:Dataset, query_id: str, num_docs: int = 10) -> tuple[list[s
     least_relevant_heap = []
     
     for qrel in dataset.scoreddocs_iter():
-        if qrel['query_id'] == query_id:
-            score = qrel['score']
-            doc_id = qrel['doc_id']
+        if qrel.query_id == query_id:
+            score = qrel.score
+            doc_id = qrel.doc_id
             
             if len(most_relevant_heap) < num_docs:
                 heapq.heappush(most_relevant_heap, (score, doc_id))
@@ -40,7 +40,7 @@ def get_docs(dataset:Dataset, query_id: str, num_docs: int = 10) -> tuple[list[s
     
     return most_relevant_docs, least_relevant_docs
 
-def get_docs_split(dataset:Dataset, queries_list: list[str], num_docs_per_query: int = 10) -> Set[str]:
+def get_docs_split(dataset:Dataset, queries_list: list[str], num_docs_per_query: int = 10) -> set[str]:
     """Returns a set of filtered document IDs for a list of queries.
 
     Args:

@@ -1,5 +1,12 @@
 from nltk.tokenize import word_tokenize
 from nltk import pos_tag
+import nltk
+nltk.download('punkt')
+nltk.download('punkt_tab')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('averaged_perceptron_tagger_eng')
+from ir_datasets.datasets.base import Dataset
+import pandas as pd
 
 def classify_query(text):
     tokens = word_tokenize(text)
@@ -32,3 +39,12 @@ def classify_query(text):
         return "YesNo"
     
     return "Other"
+
+def get_query_df(dataset:Dataset):
+    df = pd.DataFrame(columns=["Query", "Query_ID", "Class"])
+
+    for data in dataset.queries_iter():
+        query_type = classify_query(data.text)
+        df.loc[len(df)] = [data.text, data.query_id, query_type]
+
+    return df
