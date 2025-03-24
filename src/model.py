@@ -1,4 +1,7 @@
 import bm25s
+import numpy as np
+import torch
+from custom_bert import BertSentenceEncoder
 
 class MSDRanker:
     """Multi-Stage Document Ranker.
@@ -13,13 +16,14 @@ class MSDRanker:
         Args:
             corpus (list[str]): List of documents to index.
         """
+        self.corpus = corpus
         self.retriever = bm25s.BM25(corpus=corpus)
         self.retriever.index(bm25s.tokenize(corpus))
         
-        self.monobert = None
+        self.monobert = BertSentenceEncoder()
         self.duobert = None
     
-    def bm25_filter(self, query: str, k: int = 5) -> tuple[list[str], list[float]]:
+    def bm25_filter(self, query: str, k: int = 5) -> tuple[np.ndarray[int], np.ndarray[float]]:
         """Applies BM25 filtering to a given query and corpus.
 
         Args:
@@ -27,9 +31,29 @@ class MSDRanker:
             k (int, optional): Number of top-k documents to retrieve. Defaults to 5.
 
         Returns:
-            docs, scores (tuple[list[str], list[float]]): Tuple containing the list of top-k documents and their corresponding BM25 scores.
+            docs_inx, scores (np.array[int], np.array[float]): Tuple containing the list of top-k documents indices and their corresponding BM25 scores.
         """
-        results, scores = self.retriever.retrieve(bm25s.tokenize(query), k=k)
+        results, scores = self.retriever.retrieve(bm25s.tokenize(query), np.arange(len(self.corpus)), k=k)
+        return results[0, :], scores[0, :]
+        
+    def monobert_filter(self, query: str, k: int = 5) -> tuple[np.ndarray[int], np.ndarray[float]]:
+        """Applies MonoBert scoring to a given query and corpus.
+
+        Args:
+            query (str): Query for which to retrieve relevant documents.
+            k (int, optional): Number of top-k documents to retrieve. Defaults to 5.
+
+        Returns:
+            docs_inx, scores (np.array[int], np.array[float]): Tuple containing the list of top-k documents indices and their corresponding MonoBert scores.
+        """
+        scores = self.monobert.get_scores(self.corpus, query)
+        
+        inx = torch.argsort(scores, dim=0, descending=True).squeeze().detach().cpu().numpy()
+        
+        results = inx[:k]
+        
+        scores = scores[results, 0]
+        
         return results, scores
 
 if __name__ == "__main__":
@@ -45,3 +69,6 @@ if __name__ == "__main__":
     ranker = MSDRanker(corpus)
     docs, scores = ranker.bm25_filter(query, k=2)
     print(docs, scores)
+    
+    results, scores = ranker.monobert_filter(query, k=2)
+    print(results, scores)
