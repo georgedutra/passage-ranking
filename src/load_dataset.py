@@ -13,10 +13,6 @@ class DatasetLoader:
             dataset_name (str): The name of the dataset to load.
         """
         self.dataset: ir_datasets.Dataset = ir_datasets.load(dataset_name)
-        
-        split = self.split_test_train()
-        self.train_idx = split[0]
-        self.test_idx = split[1]
 
     def load_queries(self) -> pd.DataFrame:
         """
@@ -35,6 +31,26 @@ class DatasetLoader:
 
         df = pd.DataFrame(dict)
         return df
+    
+    def split_test_train(self, train_size: float = 0.8) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Splits the dataset into training and testing sets based on the specified train size.
+        Args:
+            train_size (float): Proportion of the dataset to include in the training set. 
+                                Must be a float between 0.0 and 1.0. Default is 0.8.
+        Returns:
+            tuple[pd.DataFrame, pd.DataFrame]: A tuple containing two DataFrames:
+                - The first DataFrame contains the training queries.
+                - The second DataFrame contains the testing queries.
+        """
+        num_queries = self.dataset.queries_count()
+        train_idx, test_idx = train_test_split(range(num_queries), train_size=train_size)
+        
+        queries = self.load_queries()
+        train_queries = queries.iloc[train_idx]
+        test_queries = queries.iloc[test_idx]
+
+        return train_queries, test_queries
     
     def lazy_load_docs(self, num_docs: int = -1):
         """
@@ -74,62 +90,6 @@ class DatasetLoader:
 
         df = pd.DataFrame(dict)
         return df
-
-    def split_test_train(self, train_size: float = 0.8) -> tuple:
-        """
-        Splits the dataset into training and testing indices.
-        Args:
-            train_size (float, optional): Proportion of the dataset to include in the training split. 
-                                          Must be between 0.0 and 1.0. Defaults to 0.8.
-        Returns:
-            tuple: A tuple containing two lists:
-                - train_idx (list): Indices for the training set.
-                - test_idx (list): Indices for the testing set.
-        """
-        num_docs = self.dataset.docs_count()
-        train_idx, test_idx = train_test_split(range(num_docs), train_size=train_size)
-        
-        return train_idx, test_idx
-
-    def load_train_docs(self):
-        """
-        Generator function to load training documents based on specified indices.
-        Yields:
-            tuple: A tuple containing:
-                - doc_id (str): The unique identifier of the document.
-                - doc_text (str): The text content of the document.
-        Notes:
-            - This function iterates over all documents in the dataset but only
-              yields documents whose indices are present in `self.train_idx`
-        """
-        i = 0
-        for doc in self.dataset.docs_iter():
-            if i not in self.train_idx:
-                continue
-
-            doc_text = doc.text
-            doc_id = doc.doc_id
-            yield doc_id, doc_text
-    
-    def load_test_docs(self):
-        """
-        Generator function to load test documents from the dataset.
-        Yields:
-            tuple: A tuple containing the document ID (`doc_id`) and the document text (`doc_text`)
-            for each document in the dataset that is part of the test set.
-        Notes:
-            - The method iterates over all documents in the dataset using `docs_iter()`.
-            - Only documents whose indices are present in `self.test_idx` are yielded.
-        """
-        i = 0
-        for doc in self.dataset.docs_iter():
-            if i not in self.test_idx:
-                continue
-
-            doc_text = doc.text
-            doc_id = doc.doc_id
-            yield doc_id, doc_text
-        
 
 if __name__ == "__main__":
     # Might take a while to load for the first time
