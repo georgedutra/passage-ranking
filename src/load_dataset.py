@@ -29,8 +29,7 @@ class DatasetLoader:
         """
         dict = {"query_id": [], "query": []}
 
-        a = [0, 2, 4]
-        for data in self.dataset.queries_iter()[a]:
+        for data in self.dataset.queries_iter():
             dict["query_id"].append(data.query_id)
             dict["query"].append(data.text)
 
