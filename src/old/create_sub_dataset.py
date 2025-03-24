@@ -1,6 +1,6 @@
 import ir_datasets
 import get_docs as gd
-import classify as cl
+import old.classify as cl
 import pandas as pd
 
 
