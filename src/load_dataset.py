@@ -68,7 +68,7 @@ class DatasetLoader:
         """
         dict = {"doc_id": [], "doc": []}
         
-        for doc_id, doc_text in self.lazy_load_docs(self.dataset, num_docs):
+        for doc_id, doc_text in self.lazy_load_docs(num_docs):
             dict["doc_id"].append(doc_id)
             dict["doc"].append(doc_text)
 
