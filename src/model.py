@@ -23,6 +23,16 @@ class MSDRanker:
         self.monobert = BertSentenceEncoder()
         self.duobert = BertSentenceEncoder(duobert=True)
     
+    def recalc_bm25(self, corpus: list[str]):
+        """Recalculates the BM25 index with a new corpus.
+
+        Args:
+            corpus (list[str]): List of documents to index.
+        """
+        self.corpus = corpus
+        self.retriever = bm25s.BM25(corpus=corpus)
+        self.retriever.index(bm25s.tokenize(corpus))
+    
     def bm25_filter(self, query: str, k: int = 5) -> tuple[np.ndarray[int], np.ndarray[float]]:
         """Applies BM25 filtering to a given query and corpus.
 
