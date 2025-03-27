@@ -33,13 +33,13 @@ def rank_dataset(batch_size = 1000):
         
         # Carrega os documentos de maior score
         corpus = dataset.load_docs_by_id(sorted_scores.head(10000)["doc_id"].tolist())
-        results, scores = model.monobert_filter(corpus['doc_text'].tolist(), query, top_k=100)
+        results, scores = model.monobert_filter(corpus['doc'].tolist(), query, top_k=100)
 
         #re-rank
-        corpus2 = [corpus['doc_text'].tolist()[i] for i in results]
+        corpus2 = [corpus['doc'].tolist()[i] for i in results]
         results, scores = model.duobert_filter(corpus2, query)
         
-        true_doc_text = corpus[corpus["doc_id"] == true_doc_id]["doc_text"].values[0] # texto do documento relevante
+        true_doc_text = corpus[corpus["doc_id"] == true_doc_id]["doc"].values[0] # texto do documento relevante
         true_y = [0] * 5
         for i in range(5):
             if corpus2[results[i]] == true_doc_text:
