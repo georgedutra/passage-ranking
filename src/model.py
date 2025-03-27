@@ -18,7 +18,7 @@ class MSDRanker:
         """
         self.corpus = corpus
         self.retriever = bm25s.BM25(corpus=corpus)
-        self.retriever.index(bm25s.tokenize(corpus))
+        # self.retriever.index(bm25s.tokenize(corpus))
         
         self.monobert = BertSentenceEncoder()
         self.duobert = BertSentenceEncoder(duobert=True)

@@ -13,6 +13,7 @@ class DatasetLoader:
             dataset_name (str): The name of the dataset to load.
         """
         self.dataset: ir_datasets.Dataset = ir_datasets.load(dataset_name)
+        self.docs_count = self.dataset.docs_count()
 
     def load_queries(self) -> pd.DataFrame:
         """
@@ -22,6 +23,7 @@ class DatasetLoader:
             pd.DataFrame: A DataFrame with two columns:
                 - "query_id": The unique identifier for each query.
                 - "query": The text of the query.
+                - "doc_id": The document ID associated with the query.
         """
         dict = {"query_id": [], "query": []}
 
@@ -61,29 +63,33 @@ class DatasetLoader:
 
         return train_queries, test_queries
     
-    def lazy_load_docs(self, num_docs: int = -1):
+    def lazy_load_docs(self, idx_start: int = 0, idx_end: int = 0):
         """
         Lazily loads documents from the given dataset.
         Args:
-            num_docs (int, optional): The number of documents to load. If set to -1, all documents 
-                in the dataset will be loaded. Defaults to -1.
+            idx_start (int, optional): The starting index of the documents to load (inclusive). Defaults to 0.
+            idx_end (int, optional): The ending index of the documents to load (exclusive). 
+                If set to 0, all documents will be loaded. Defaults to 0.
         Yields:
-            str: The document text.
+            tuple: A tuple containing:
+                - str: The document ID.
+                - str: The document text.
         """
-        if num_docs == -1:
-            num_docs = self.dataset.docs_count()
+        if idx_end == 0:
+            idx_end = self.docs_count
 
-        for doc in self.dataset.docs_iter()[:num_docs]:
-            yield doc.text
+        for doc in self.dataset.docs_iter()[idx_start : idx_end]:
+            yield doc.doc_id, doc.text
 
-    def full_load_docs(self, num_docs: int = -1) -> pd.DataFrame:
+    def full_load_docs(self, idx_start: int = 0, idx_end: int = -1) -> pd.DataFrame:
         """
         Loads documents from the given dataset into a pandas DataFrame.
-        Probably won't work witk msmarco dataset, since it has more than 20Gb of data.
+        Probably won't work with the whole msmarco dataset, since it has more than 20Gb of data.
 
         Args:
-            num_docs (int, optional): The maximum number of documents to load. 
-                If set to -1, all documents will be loaded. Defaults to -1.
+            idx_start (int, optional): The starting index of the documents to load (inclusive). Defaults to 0.
+            idx_end (int, optional): The ending index of the documents to load (exclusive). 
+                If set to 0, all documents will be loaded. Defaults to 0.
         Returns:
             pd.DataFrame: A DataFrame containing the loaded documents with two columns:
                 - 'doc_id': The unique identifier for each document.
@@ -91,12 +97,33 @@ class DatasetLoader:
         """
         dict = {"doc_id": [], "doc": []}
         
-        for doc_id, doc_text in self.lazy_load_docs(num_docs):
+        for doc_id, doc_text in self.lazy_load_docs(idx_start, idx_end):
             dict["doc_id"].append(doc_id)
             dict["doc"].append(doc_text)
 
         df = pd.DataFrame(dict)
         return df
+
+    def load_docs_by_id(self, id_list: list):
+        """
+        Loads documents from the given dataset into a pandas DataFrame based on a list of document IDs.
+        Args:
+            id_list (list): A list of document IDs to load.
+        Returns:
+            pd.DataFrame: A DataFrame containing the loaded documents with two columns:
+                - 'doc_id': The unique identifier for each document.
+                - 'doc': The text content of each document.
+        """
+        dict = {"doc_id": [], "doc": []}
+        
+        for doc_id, doc_text in self.lazy_load_docs():
+            if doc_id in id_list:
+                dict["doc_id"].append(doc_id)
+                dict["doc"].append(doc_text)
+
+        df = pd.DataFrame(dict)
+        return df
+        
 
 if __name__ == "__main__":
     # Might take a while to load for the first time
