@@ -30,6 +30,15 @@ class DatasetLoader:
             dict["query"].append(data.text)
 
         df = pd.DataFrame(dict)
+
+        dict_2 = {"query_id": [], "doc_id": []}
+        for qrel in self.dataset.qrels_iter():
+            dict_2["query_id"].append(qrel.query_id)
+            dict_2["doc_id"].append(qrel.doc_id)
+        
+        df_2 = pd.DataFrame(dict_2)
+        df = pd.merge(df, df_2, on="query_id")
+
         return df
     
     def split_test_train(self, train_size: float = 0.8) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -39,7 +48,7 @@ class DatasetLoader:
             train_size (float): Proportion of the dataset to include in the training set. 
                                 Must be a float between 0.0 and 1.0. Default is 0.8.
         Returns:
-            tuple[pd.DataFrame, pd.DataFrame]: A tuple containing two DataFrames:
+            tuple: A tuple containing two DataFrames:
                 - The first DataFrame contains the training queries.
                 - The second DataFrame contains the testing queries.
         """
@@ -59,15 +68,13 @@ class DatasetLoader:
             num_docs (int, optional): The number of documents to load. If set to -1, all documents 
                 in the dataset will be loaded. Defaults to -1.
         Yields:
-            tuple: A tuple containing the document ID (str) and the document text (str).
+            str: The document text.
         """
         if num_docs == -1:
             num_docs = self.dataset.docs_count()
 
         for doc in self.dataset.docs_iter()[:num_docs]:
-            doc_text = doc.text
-            doc_id = doc.doc_id
-            yield doc_id, doc_text
+            yield doc.text
 
     def full_load_docs(self, num_docs: int = -1) -> pd.DataFrame:
         """
@@ -99,6 +106,6 @@ if __name__ == "__main__":
     from IPython.display import display
     display(queries) 
     
-    docs = loader.full_load_docs(10)
-    display(docs) 
+    # docs = loader.full_load_docs(10)
+    # display(docs) 
     
