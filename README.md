@@ -55,9 +55,11 @@ A maneira mais eficiente de avaliar o modelo seria criar uma matrix de embedding
 ## Métricas
 O que chamamos de precisão@x é se pelo menos umas das x primeiras sugestões é relevante
 
-Tempo médio para recuperar um documento para uma query: 0.013438280638273771 segundos
-Precisão do modelo no teste: 0.866113316492241 %
-Precisão@5 do modelo no teste: 3.067484662576687 %
-Precisão@10 do modelo no teste: 5.44929628293035 %
-MRR@5: 0.016426079634307714
-MRR@10: 0.019555859153477344
+| Métrica                     | Valor                      |
+|-----------------------------|---------------------------|
+| Tempo médio de recuperação  | 0.0134 segundos           |
+| Precisão do modelo (teste)  | 86.61%                    |
+| Precisão@5                  | 3.07%                     |
+| Precisão@10                 | 5.45%                     |
+| MRR@5                       | 0.0164                    |
+| MRR@10                      | 0.0196                    |
