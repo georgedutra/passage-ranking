@@ -35,3 +35,29 @@ Uma das tarefas específicas do paper é saber se é possível resolver uma perg
 
 ## Como criar?
 Chame a função create_sub_dataset(n) que será retornado ... com n perguntas aleatórias com o processo descrito e seus documentos correspondentes.
+
+
+## Abordagem "Bert-only"
+O Bert é um modelo que extrai conteúdo semântico de sentenças. Ou seja, ele produz um embedding enriquecido pela self-attention entre os tokens e é esse embedding que é passado para os modelos seguintes que fazem as tarefas downstream. No caso do bert-base-uncased usado, o embedding de cada documento é um vetor de tamanho 768. Nós carregamos cada um dos documentos e criamos uma matrix n_docs x 768 que descreve o corpus de documentos.
+
+A nossa ideia é que queries são bem respondidas por documentos que estão em campos semânticos similares. Ou seja, uma query é bem respondida por um documento com um embedding similar. Essa similaridade é avaliada pelo produto interno entre embeddings.
+
+Assim, para sugerir documentos que respondem uma query, o procedimento é:
+- carregar a matrix $D$ de embeddings de documentos
+- passar a query pelo bert para obter o embedding $q$
+- calcular $s = Dq$
+- os documentos que melhor respondem a query são os k argmax de $s$
+
+Importante: criamos um dicionário que mapeia esses índices para o id original do documento.
+
+A maneira mais eficiente de avaliar o modelo seria criar uma matrix de embeddings das queries $Q$ e calcular $DQ$, mas, para simular um uso real (em que uma aplicação recebe diferente queries em sequência), não agregamos cada um dos vetores de embeddings de queries em uma matriz, mas calculamos os embeddings em tempo de execução e fazemos $Dq$.
+
+## Métricas
+O que chamamos de precisão@x é se pelo menos umas das x primeiras sugestões é relevante
+
+Tempo médio para recuperar um documento para uma query: 0.013438280638273771 segundos
+Precisão do modelo no teste: 0.866113316492241 %
+Precisão@5 do modelo no teste: 3.067484662576687 %
+Precisão@10 do modelo no teste: 5.44929628293035 %
+MRR@5: 0.016426079634307714
+MRR@10: 0.019555859153477344

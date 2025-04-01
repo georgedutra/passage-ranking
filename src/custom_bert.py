@@ -34,7 +34,7 @@ class BertSentenceEncoder(torch.nn.Module):
                 torch.nn.Linear(256, 128)
             ).to(self.device)
 
-    def forward(self, sentences):
+    def get_embeddings(self, sentences):
         # Tokenize input sentences
         encoded_input = self.tokenizer(
             sentences,
@@ -68,6 +68,11 @@ class BertSentenceEncoder(torch.nn.Module):
         
         # Compute final embeddings
         sentence_embeddings = sum_embeddings / sum_mask
+        
+        return sentence_embeddings
+
+    def forward(self, sentences):
+        sentence_embeddings = self.get_embeddings(sentences)
         
         # Pass embeddings through digester
         # This is the trainable part of the model
