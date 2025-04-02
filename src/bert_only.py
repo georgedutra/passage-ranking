@@ -141,9 +141,9 @@ def time_check(model, queries, num_docs, docs_embeddings, new_doc_ids, docs):
         times.append(end - start)
     
     times = np.array(times)
-    return times.mean()
+    return times.mean(), times.max()
 
-#print("Tempo médio para recuperar um documento para uma query:", time_check(model, test_queries, 1, docs_embeddings, new_doc_ids, data['docs']))
+print("Tempo médio para recuperar um documento para uma query:", time_check(model, test_queries, 1, docs_embeddings, new_doc_ids, data['docs']))
 
 def get_precision(model, queries, num_docs, docs_embeddings, new_doc_ids, qrels):
     correct = 0
@@ -190,5 +190,39 @@ def mrr(model, queries, num_docs, docs_embeddings, new_doc_ids, qrels):
     
     return reciprocal_ranks.sum() / num_queries
 
-print("MRR@5:", mrr(model, queries, 5, docs_embeddings, new_doc_ids, qrels))
-print("MRR@10:", mrr(model, queries, 10, docs_embeddings, new_doc_ids, qrels))
+#print("MRR@5:", mrr(model, queries, 5, docs_embeddings, new_doc_ids, qrels))
+print("MRR@10:", mrr(model, queries, 10, docs_embeddings, new_doc_ids, qrels) * 100)
+
+def recall_at(model, queries, num_docs, docs_embeddings, new_doc_ids, qrels):
+    tp = 0
+    fn = 0
+    
+    for query_id, query in queries.items():
+        query = query[1] # query text
+        
+        relevant_docs = list(qrels[qrels['query_id'] == query_id]['doc_id'])
+        
+        doc_inx = evaluate_query(model, query, num_docs, docs_embeddings)
+        if num_docs == 1:
+            old_doc_id = new_doc_ids[int(doc_inx)]
+            
+            if old_doc_id in relevant_docs:
+                tp += 1
+                
+                fp += len(relevant_docs) - 1
+            
+        else:
+            num_relevants_left = len(relevant_docs)
+            for doc_i in doc_inx:
+                old_doc_id = new_doc_ids[int(doc_i)]
+                
+                if old_doc_id in relevant_docs:
+                    tp += 1
+                    num_relevants_left -= 1
+            
+            fn += num_relevants_left # add the number of not found relevants
+        
+    return tp / (tp + fn)
+
+
+print("Recall@100:", recall_at(model, queries, 100, docs_embeddings, new_doc_ids, qrels))
